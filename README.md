@@ -7,9 +7,10 @@ package main
 
 import (
 	"fmt"
-	"houdinimanager"
 	"log"
 	"time"
+
+	"github.com/MXLange/houdinimanager"
 )
 
 func main() {
