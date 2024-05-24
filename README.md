@@ -17,7 +17,7 @@ func main() {
 
 	houdini, err := houdinimanager.NewHoudiniManager(true, true, 2)
 	if err != nil {
-		log.Fatalf("Erro ao criar o gerenciador de rotinas: %v", err.Error())
+		log.Fatalf("Error creating routine manager: %v", err.Error())
 	}
 
 	for i := 1; i <= 5; i++ {
@@ -29,7 +29,7 @@ func main() {
 
 	houdini2, err := houdinimanager.NewHoudiniManager(false, false, 0)
 	if err != nil {
-		log.Fatalf("Erro ao criar o gerenciador de rotinas: %v", err.Error())
+		log.Fatalf("Error creating routine manager: %v", err.Error())
 	}
 
 	for i := 1; i <= 50; i++ {
@@ -43,7 +43,7 @@ func main() {
 }
 
 func teste(i int, config string) {
-	fmt.Printf("Executando rotina %v, config %v\n", i, config)
+	fmt.Printf("Executando rotina %v, config: (%v\n)", i, config)
 	time.Sleep(time.Duration(i) * time.Second)
-	fmt.Printf("Rotina %v finalizada, config %v\n", i, config)
+	fmt.Printf("Rotina %v finalizada, config: (%v\n)", i, config)
 }
