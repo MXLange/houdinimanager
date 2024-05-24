@@ -36,7 +36,7 @@ func NewHoudiniManager(setMaxRoutines, needToWait bool, maxRoutines int) (*Houdi
 }
 
 func (r *HoudiniManager) Execute(f func()) {
-	r.waitAvailableHoudini()
+	r.waitAvailableRoutine()
 	r.addCount()
 	r.addWait()
 	go func(r *HoudiniManager) {
@@ -68,7 +68,7 @@ func (r *HoudiniManager) PrintHoudiniCounter() {
 	println("Houdini counter: ", r.routineCounter)
 }
 
-func (r *HoudiniManager) waitAvailableHoudini() {
+func (r *HoudiniManager) waitAvailableRoutine() {
 	if r.maxRoutines > 0 {
 		for r.routineCounter == r.maxRoutines {
 			time.Sleep(500 * time.Millisecond)
