@@ -3,14 +3,13 @@ package houdinimanager
 import (
 	"errors"
 	"sync"
-	"time"
 )
 
 type HoudiniManager struct {
-	routineCounter int
-	maxRoutines    int
-	syncGroup      sync.WaitGroup
+	channel        chan int
+	waitGroup      sync.WaitGroup
 	needToWait     bool
+	setMaxRoutines bool
 }
 
 func NewHoudiniManager(setMaxRoutines, needToWait bool, maxRoutines int) (*HoudiniManager, error) {
@@ -22,67 +21,48 @@ func NewHoudiniManager(setMaxRoutines, needToWait bool, maxRoutines int) (*Houdi
 	}
 
 	manager := &HoudiniManager{
-		routineCounter: 0,
-		needToWait:     needToWait,
+		needToWait: needToWait,
 	}
 
 	if setMaxRoutines {
-		manager.maxRoutines = maxRoutines
+		manager.channel = make(chan int, maxRoutines)
+		manager.setMaxRoutines = true
+	} else {
+		manager.channel = make(chan int)
+		manager.setMaxRoutines = false
 	}
 
-	manager.syncGroup = sync.WaitGroup{}
+	if needToWait {
+		manager.waitGroup = sync.WaitGroup{}
+	}
 
 	return manager, nil
 }
 
 func (r *HoudiniManager) Execute(f func()) {
-	r.waitAvailableRoutine()
-	r.addCount()
-	r.addWait()
+	if r.setMaxRoutines {
+		r.channel <- 1
+	}
+	if r.needToWait {
+		r.waitGroup.Add(1)
+	}
 	go func(r *HoudiniManager) {
-		defer r.reduceCount()
-		defer r.doneWait()
 		f()
+		if r.setMaxRoutines {
+			<-r.channel
+		}
+		if r.needToWait {
+			r.waitGroup.Done()
+		}
 	}(r)
-}
-
-func (r *HoudiniManager) addWait() {
-	if r.needToWait {
-		r.syncGroup.Add(1)
-	}
-}
-
-func (r *HoudiniManager) doneWait() {
-	if r.needToWait {
-		r.syncGroup.Done()
-	}
 }
 
 func (r *HoudiniManager) Wait() {
 	if r.needToWait {
-		r.syncGroup.Wait()
+		r.waitGroup.Wait()
 	}
 }
 
-func (r *HoudiniManager) PrintHoudiniCounter() {
-	println("Houdini counter: ", r.routineCounter)
-}
-
-func (r *HoudiniManager) waitAvailableRoutine() {
-	if r.maxRoutines > 0 {
-		for r.routineCounter == r.maxRoutines {
-			time.Sleep(500 * time.Millisecond)
-		}
-	}
-}
-func (r *HoudiniManager) addCount() {
-	if r.maxRoutines > 0 {
-		r.routineCounter++
-	}
-}
-
-func (r *HoudiniManager) reduceCount() {
-	if r.maxRoutines > 0 {
-		r.routineCounter--
-	}
+func (r *HoudiniManager) Close() {
+	close(r.channel)
 }
